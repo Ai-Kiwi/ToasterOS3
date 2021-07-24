@@ -1,3 +1,7 @@
+--SystemValues
+local StartupPath = "UserData/UserFiles/OnStartup/"
+
+
 local BackGroundTerm = term.current()
 local WindowEventOutput = {}
 local windowsTerm = {}
@@ -32,7 +36,7 @@ end
 local function RunProgeamLoops()
 
     --cheeks for key clicks
-    NewEventOutput = {os.pullEventRaw()}
+
     if NewEventOutput[1] == "key" then
         if NewEventOutput[2] == keys.home then
             AppLuncher()
@@ -91,7 +95,15 @@ local function RunProgeamLoops()
                 IsMoveingWindow[i] = false
                 IsResizingWindow[i] = false
             end
-            
+            --tests for click
+            if NewEventOutput[1] == "mouse_click" then
+                --if clicking on stop butten
+                if NewEventOutput[3] == windowsTerm[i][3][3] + windowsTerm[i][3][1] then
+                if NewEventOutput[4] == windowsTerm[i][3][2] - 1 then
+                    windowsTerm[i][5] = not windowsTerm[i][5]
+                end
+                end
+            end
             --cheeks if progeam is running
             if windowsTerm[i][5] == true then
                 --redricts all new drawing to window
@@ -99,6 +111,8 @@ local function RunProgeamLoops()
                 --says not to close window
                 CloseCoroutineWindow = false
                 coroutine.resume(windowsTerm[i][2], unpack(NewEventOutput))
+                --stops blinking
+                term.setCursorBlink(false)
                 --tests if progeam has finished
                 if CloseCoroutineWindow then
                     --delete window
@@ -124,15 +138,21 @@ local function DrawBackground()
             windowsTerm[i][1].redraw()
             paintutils.drawBox(windowsTerm[i][3][1] - 1,windowsTerm[i][3][2] - 1,windowsTerm[i][3][3] + windowsTerm[i][3][1],windowsTerm[i][3][4] + windowsTerm[i][3][2],colors.yellow)
             --draws reshape and move buttens
-            paintutils.drawPixel(windowsTerm[i][3][1] - 1,windowsTerm[i][3][2] - 1, colors.orange)
-            paintutils.drawPixel(windowsTerm[i][3][3] + windowsTerm[i][3][1],windowsTerm[i][3][4] + windowsTerm[i][3][2],colors.green)
+            paintutils.drawPixel(windowsTerm[i][3][1] - 1,windowsTerm[i][3][2] - 1, colors.orange) --move butten
+            paintutils.drawPixel(windowsTerm[i][3][3] + windowsTerm[i][3][1],windowsTerm[i][3][4] + windowsTerm[i][3][2],colors.green) --resize butten
             --draws close and minamize and pause buttens
-            paintutils.drawPixel(windowsTerm[i][3][3] + windowsTerm[i][3][1],windowsTerm[i][3][4] + windowsTerm[i][3][2],colors.green)
+            if windowsTerm[i][5] == true then
+                paintutils.drawPixel(windowsTerm[i][3][3] + windowsTerm[i][3][1],windowsTerm[i][3][2] - 1,colors.red) -- stop botten
+            else
+                paintutils.drawPixel(windowsTerm[i][3][3] + windowsTerm[i][3][1],windowsTerm[i][3][2] - 1,colors.green) -- resume botten
+            end
         end
     end
 end
 
-function AppLuncher()
+
+
+function DrawAppLuncher()
     --draws background and app launahcer icon
     term.setBackgroundColour(colors.lightGray)
     term.clear()
@@ -172,8 +192,20 @@ function AppLuncher()
         term.setCursorPos(offsetX + 1,offsetY + 5)
         term.write(ProgeamsFound[i])
     end
+end
+function AppLuncher()
     while true do
-        local Event, ClickName, ClickXPos, ClickUPos = os.pullEvent()
+        
+        NewEventOutput = {os.pullEventRaw()}
+        while NewEventOutput[1] == "setting_changed" do
+            NewEventOutput = {os.pullEventRaw()}
+        end 
+        print(NewEventOutput[1])
+        local Event = NewEventOutput[1]
+        local ClickName = NewEventOutput[2]
+        local ClickXPos = NewEventOutput[3]
+        local ClickUPos = NewEventOutput[4]
+
         if Event == "mouse_click" then
             if ClickName == 1 then
                 --gets pos for number
@@ -203,16 +235,29 @@ function AppLuncher()
                 return
             end
         end
-
-
+        RunProgeamLoops()
+        DrawAppLuncher()
     end
 end
 
 
 
-OpenNewApp("UserData/UserFiles/Startup.lua")
+if fs.exists(StartupPath) then
+    local FilesToStartup = fs.list(StartupPath)
+    for i=1, #FilesToStartup do
+        OpenNewApp(StartupPath .. FilesToStartup[i])
+    end
+    
+else
+    fs.makeDir(StartupPath)
+    os.reboot()
+end
+
+
+
 while true do
     DrawBackground()
+    NewEventOutput = {os.pullEventRaw()}
     RunProgeamLoops()
     
     --os.sleep(0.01)
@@ -227,3 +272,4 @@ end
 --add task amnger
 --add app store
 -- add files on desktop
+-- fix setting_changed broken while in app lunahcer
