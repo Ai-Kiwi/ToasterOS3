@@ -5,5 +5,5 @@ shell.run("wget https://raw.githubusercontent.com/Ai-Kiwi/ToasterOS3/main/System
 shell.run("wget https://raw.githubusercontent.com/Ai-Kiwi/ToasterOS3/main/SystemFiles/UserData/ProgramShortcuts/Worm UserData/ProgramShortcuts/Worm")
 shell.run("wget https://raw.githubusercontent.com/Ai-Kiwi/ToasterOS3/main/SystemFiles/SystemFiles/CreateAppShortcut.lua SystemFiles/CreateAppShortcut.lua")
 shell.run("wget https://raw.githubusercontent.com/Ai-Kiwi/ToasterOS3/main/SystemFiles/SystemFiles/WindowManager.lua SystemFiles/WindowManager.lua")
-
+os.reboot()
 --https://raw.githubusercontent.com/Ai-Kiwi/ToasterOS3/main/README.md?token=AP5ZLQ3IWSYOLRY3BVGCP4LA5K3Z4
