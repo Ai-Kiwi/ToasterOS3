@@ -70,6 +70,8 @@ while true do
 local event, ClickSide, clickX, clickY = os.pullEvent("mouse_click")
 clickItemNum = clickY
 if clickItemNum == 4 then
+    term.setBackgroundColour(colors.black)
+    term.setTextColor(colors.white)
     shell.run(locastion)
     return
 elseif clickItemNum == 5 then
