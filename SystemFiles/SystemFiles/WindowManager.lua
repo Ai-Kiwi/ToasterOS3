@@ -470,7 +470,11 @@ local function RunLoopForProgeam(Number,Input)
             end
         end
         
-        ProgeamEventInput = textutils.unserialise(textutils.serialise(EventInput))
+        ProgeamEventInput = {}
+        for k, v in pairs(EventInput) do --Don't use ipairs here because that only works with numeric inexes
+            ProgeamEventInput[k] = v --Here we copy the key and the value from the original table
+        end
+        
         --moves mouse to fix bug with mouse clicks
         if ProgeamEventInput[1] == "mouse_click" or ProgeamEventInput[1] == "mouse_drag" or ProgeamEventInput[1] == "mouse_scroll" or ProgeamEventInput[1] == "mouse_up" then
             ProgeamEventInput[3] = ProgeamEventInput[3] - windowsTerm[Number][3][1] + 1
@@ -513,7 +517,7 @@ local function RunLoopForProgeam(Number,Input)
             --tests if progeam has finished
             if CloseCoroutineWindow then
                 --delete window
-                --windowsTerm[Number] = nil
+                windowsTerm[Number] = nil
             end
         end
     end
