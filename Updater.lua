@@ -91,9 +91,6 @@ local function UpdateComputer()
 
     fs.delete("ToasterOSUpdater")
     InstallFromInternet("https://raw.githubusercontent.com/Ai-Kiwi/ToasterOS3/main/Updater.lua","ToasterOSUpdater.lua")
-    --dowloads defalt user apps
-    InstallFromInternet("https://raw.githubusercontent.com/Ai-Kiwi/ToasterOS3/main/SystemFiles/UserTemplate/ProgramShortcuts/Shell","UserData/ProgramShortcuts/Shell")
-    InstallFromInternet("https://raw.githubusercontent.com/Ai-Kiwi/ToasterOS3/main/SystemFiles/UserTemplate/ProgramShortcuts/Worm","UserData/ProgramShortcuts/Worm")
     --core system files
     InstallFromInternet("https://raw.githubusercontent.com/Ai-Kiwi/ToasterOS3/main/SystemFiles/startup.lua","startup.lua")
     InstallFromInternet("https://raw.githubusercontent.com/Ai-Kiwi/ToasterOS3/main/SystemFiles/SystemFiles/CreateAppShortcut.lua","SystemFiles/CreateAppShortcut.lua")
