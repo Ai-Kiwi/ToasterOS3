@@ -108,7 +108,8 @@ if args[2] == "true" then
         github_file = GithubFileLink.readAll()
         GithubFileLink.close()
         print(github_file)
-        print((github_file == "0.11"))
+        local IsTrue = (github_file == "0.11")
+        print(IsTrue)
         os.sleep(5)
         
         if github_file == "0.11" then
