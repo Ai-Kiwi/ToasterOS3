@@ -118,7 +118,7 @@ if args[2] == "true" then
             term.setTextColor(colors.white)
         else
             
-            setting.set("verson",github_file)
+            settings.set("verson",github_file)
             settings.save("ToasterOsbios")
             UpdateComputer()
         end
