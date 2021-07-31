@@ -107,22 +107,19 @@ if args[2] == "true" then
     if GithubFileLink then
         github_file = GithubFileLink.readAll()
         GithubFileLink.close()
-        print(github_file)
-        local IsTrue = (github_file == "0.11")
-        print(IsTrue)
-        os.sleep(5)
+        local f = io.open("ToasterOsVerson", "r")
+        local LocalVerson = f:readAll()
+        f:close()
         
-        if github_file == "0.11" then
+        
+        if github_file == LocalVerson then
             term.setTextColor(colors.green)
             print("upto date")
             term.setTextColor(colors.white)
         else
-            if github_file == nil then
-                term.setTextColor(colors.red)
-                print("failed cheeking for updates updating anyway")
-                os.sleep(1)
-                UpdateComputer()
-            end
+            local f = io.open("ToasterOsVerson", "w")
+            f:write(github_file)
+            f:close()
             UpdateComputer()
         end
 
