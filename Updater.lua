@@ -10,7 +10,7 @@ local function UpdateComputer()
     local iconNumberPercentUpto = 0
     local OldCurserPosY = 2
     local OldCurserPosX = 1
-    local RowsToTakeUp = math.floor(200 / moniterwidth) + 1
+    local RowsToTakeUp = math.floor(150 / moniterwidth) + 1
     local RowsPerPage = math.floor(moniterhight / RowsToTakeUp)
     if args[1] == "true" then
         shell.run("delete /*")
@@ -128,7 +128,6 @@ if args[2] == "true" then
 else
     UpdateComputer()
 end
-
 
 
 
