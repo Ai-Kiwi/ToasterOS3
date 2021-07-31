@@ -107,7 +107,7 @@ if args[2] == "true" then
     if GithubFileLink then
         github_file = GithubFileLink.readAll()
         GithubFileLink.close()
-        if github_file == "0.2" then
+        if github_file == "0.11" then
             term.setTextColor(colors.green)
             print("upto date")
             term.setTextColor(colors.white)
