@@ -107,7 +107,7 @@ if args[2] == "true" then
     if GithubFileLink then
         github_file = GithubFileLink.readAll()
         GithubFileLink.close()
-        local f = io.open("ToasterOsVerson", "r")
+        local f = fs.open("ToasterOsVerson", "r")
         local LocalVerson = f:readAll()
         f:close()
         
@@ -117,7 +117,7 @@ if args[2] == "true" then
             print("upto date")
             term.setTextColor(colors.white)
         else
-            local f = io.open("ToasterOsVerson", "w")
+            local f = fs.open("ToasterOsVerson", "w")
             f:write(github_file)
             f:close()
             UpdateComputer()
