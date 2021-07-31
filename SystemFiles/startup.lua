@@ -9,6 +9,7 @@ end
 --PrintNumber(2)
 --PrintNumber(1)
 
+shell.run("ToasterOSUpdater.lua false true")
 
 BackGroundFlash(colors.black,0.05)
 BackGroundFlash(colors.gray,0.05)
