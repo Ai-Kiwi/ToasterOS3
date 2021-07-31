@@ -1,5 +1,6 @@
 {
   [ "shortcut loc" ] = "rom/programs/shell.lua",
+  [ "boot perm level" ] = 5,
   Icon = {
     16,
     32768,

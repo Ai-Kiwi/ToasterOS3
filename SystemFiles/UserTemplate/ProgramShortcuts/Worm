@@ -1,5 +1,6 @@
 {
   [ "shortcut loc" ] = "rom/programs/fun/worm.lua",
+  [ "boot perm level" ] = 1,
   Icon = {
     1,
     2,
@@ -75,4 +76,5 @@
     " ",
   },
   Desc = "The worm progeam pre installed in rom",
+  
 }

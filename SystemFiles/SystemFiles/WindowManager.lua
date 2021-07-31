@@ -1,11 +1,57 @@
+local ScreenWidth,  ScreenHight = term.getSize()
+
+Accounts = fs.list("UserData")
+
+term.setBackgroundColor(colors.black)
+
+term.clear()
+term.setCursorPos(1,1)
+term.setBackgroundColor(colors.black)
+term.setTextColor(colors.white)
+print(0 .. " : New User")
+for i=1, #Accounts do
+    print(i .. " : " .. Accounts[i])
+    
+end
+
+print("")
+print("account to login to?")
+term.write("> ")
+
+
+
+UserNumber = read()
+UserNumber = tonumber(UserNumber)
+
+if UserNumber == 0 then
+    term.clear()
+    term.setCursorPos(1,1)
+    print("UserName? (no spaces)")
+    term.write("> ")
+    UserNumber = read()
+    shell.run("SystemFiles/Usermaker.lua " .. UserNumber)
+    os.reboot()
+end
+
+
+local UserLogined = Accounts[UserNumber]
+
+if UserLogined == nil then
+    printError("invaild user")
+    os.sleep(2)
+    os.reboot()
+end
+
 --SystemValues
-local StartupPath = "UserData/UserFiles/OnStartup/"
 
-
+local StartupPath = "UserData/" .. UserLogined .. "/UserFiles/OnStartup/"
+local UserFilesPath = "UserData/" .. UserLogined .. "/"
+local CommandNextTick = {}
+local PermLevelColorCodes = {colors.white,colors.green,colors.orange,colors.red, colors.red}
 local BackGroundTerm = term.current()
 local WindowEventOutput = {}
 local windowsTerm = {}
-local ScreenWidth,  ScreenHight = term.getSize()
+
 local WindowX = 0
 local WindowY = 0
 local WindowXScale = 0
@@ -17,19 +63,456 @@ local LastMouseClickY = 0
 local IsMoveingWindow = {}
 local IsResizingWindow = {}
 local CloseCoroutineWindow = false
+local FsInVM = {}
+local LocOFVMFiles = "UserData/" .. UserLogined .. "/"
+local RomLoc = "rom/"
+local LocToOpen = ""
+local PermLevelToload = 0
+local ToasterOsVerson = 0.1
+local ProgeamEventInput = {}
+
+
+
+
+local function commandHasBennRun()
+    
+end
+
 --script for opening files
-local function OpenNewApp(ProgeamLoc)
+local function OpenNewApp(ProgeamLoc,PermLevel)
+
     --creates a coutine and window for it
     local NewWindow = window.create(BackGroundTerm, 2, 2, 15, 15, true)
     ProgeamToRun = ProgeamLoc
     local NewCoroutine = coroutine.create(CoroutineRunAppFunction)
-    table.insert(windowsTerm, {NewWindow,NewCoroutine,{2,2,15,15},true,true})
+    --perm levels
+    --1 nomeal progeam running in full on vm
+    --2 higher level progeam can accses system calls like draw over apps
+    --3 Full system perms can accses files and all
+    --4 operating system perms its dumb to give something accses to this
+    --5 rare for a app to need this more of a code thing i did that your not ment to use anyway its used for shell
+    
+    table.insert(windowsTerm, {NewWindow,NewCoroutine,{2,2,15,15},true,true,PermLevel,ProgeamLoc})
+
 end
+
+--progeam calls command
+local function TestCoroutine(coroutineOutput,ProgeamPerms)
+    if coroutineOutput then
+        local ProgeamPermsLevel = tonumber(ProgeamPerms)
+
+
+        --returns array saying if it complited sussesfully and command type as well as 
+
+        if ProgeamPermsLevel > 3 then -- its operating system perms
+
+
+        end
+        if ProgeamPermsLevel > 2 then -- higher level progeam
+
+
+        end
+        if ProgeamPermsLevel > 1 then -- full system perm
+
+
+        end
+        if ProgeamPermsLevel > 0 then -- its a nomeal progeam
+            --coroutine.yield({"restart"})
+            if coroutineOutput[1] == "restart" then
+                os.reboot()
+                return {"ToasterOSCommand","restarted","successfully"}
+            end
+
+            --coroutine.yield({"verson"})
+            if coroutineOutput[1] == "verson" then
+                return {"ToasterOSCommand","verson",ToasterOsVerson}
+            end
+
+             --coroutine.yield({"PermLevel"})
+             if coroutineOutput[1] == "PermLevel" then
+                return {"ToasterOSCommand","PermLevel",ProgeamPermsLevel}
+            end
+            
+            -- secand : loc thrid : is system app
+            --coroutine.yield({"RunFile","FileExplorer.lua",true})
+            --coroutine.yield({"RunFile","rom/programs/fun/worm.lua",false})
+            if coroutineOutput[1] == "RunFile" then
+                if coroutineOutput[2] then
+                    if coroutineOutput[3] == true then
+                        PermLevelToload = 5
+                        LocToOpen = "SystemFiles/SystemPrograms/" .. coroutineOutput[2]
+                    else
+                        PermLevelToload = 1
+                        LocToOpen = coroutineOutput[2]
+                    end
+                    OpenNewApp(LocToOpen,PermLevelToload)
+                    return {"ToasterOSCommand","RunFile","successfully",LocToOpen,PermLevelToload}
+                else
+                    return {"ToasterOSCommand","RunFile","Failed"}
+                end
+            end
+        end
+    
+    end
+    --returns nothing happened
+    return nil
+end
+
+
+
+
+
+--loads things for Vming apps
+local function StartVm()
+    --fs.list
+    FsInVM.list = fs.list
+    local function ListInVM(path)
+        NewPath = LocOFVMFiles .. path
+        INROM = string.find(path, RomLoc )
+        if INROM then
+            NewPath = path
+        end
+        commandHasBennRun("ListInVM",path)
+        return FsInVM.list(NewPath)
+    end
+    fs.list = ListInVM
+
+    --fs.getname
+    FsInVM.getName = fs.getName
+    local function GetNameInVM(path)
+        NewPath = LocOFVMFiles .. path
+        INROM = string.find(path, RomLoc )
+        if INROM then
+            NewPath = path
+        end
+        commandHasBennRun("GetNameInVM",path)
+        return FsInVM.getName(NewPath)
+    end
+    fs.getName = GetNameInVM
+
+
+    --fs.getDir
+    FsInVM.getDir = fs.getDir
+    local function GetDirInVM(path)
+        NewPath = LocOFVMFiles .. path
+        INROM = string.find(path, RomLoc )
+        if INROM then
+            NewPath = path
+        end
+        commandHasBennRun("GetDirInVM",path)
+        return FsInVM.getDir(NewPath)
+    end
+    fs.getDir = GetDirInVM
+
+    FsInVM.getSize = fs.getSize
+    local function getSizeInVM(path)
+        NewPath = LocOFVMFiles .. path
+        INROM = string.find(path, RomLoc )
+        if INROM then
+            NewPath = path
+        end
+        commandHasBennRun("getSizeInVM",path)
+        return FsInVM.getSize(NewPath)
+    end
+    fs.getSize = getSizeInVM
+
+    FsInVM.exists = fs.exists
+    local function existsInVM(path)
+        NewPath = LocOFVMFiles .. path
+        INROM = string.find(path, RomLoc )
+        if INROM then
+            NewPath = path
+        end
+        commandHasBennRun("existsInVM",path)
+        return FsInVM.exists(NewPath)
+    end
+    fs.exists = existsInVM
+
+    FsInVM.isDir = fs.isDir
+    local function isDirInVM(path)
+        NewPath = LocOFVMFiles .. path
+        INROM = string.find(path, RomLoc )
+        if INROM then
+            NewPath = path
+        end
+        commandHasBennRun("isDirInVM",path)
+        return FsInVM.isDir(NewPath)
+    end
+    fs.isDir = isDirInVM
+
+    FsInVM.isReadOnly = fs.isReadOnly
+    local function isReadOnlyInVM(path)
+        NewPath = LocOFVMFiles .. path
+        INROM = string.find(path, RomLoc )
+        if INROM then
+            NewPath = path
+        end
+        commandHasBennRun("isReadOnlyInVM",path)
+        return FsInVM.isReadOnly(NewPath)
+    end
+    fs.isReadOnly = isReadOnlyInVM
+
+
+    FsInVM.makeDir = fs.makeDir
+    local function makeDirInVM(path)
+        NewPath = LocOFVMFiles .. path
+        INROM = string.find(path, RomLoc )
+        if INROM then
+            NewPath = path
+        end
+        commandHasBennRun("makeDirInVM",path)
+        return FsInVM.makeDir(NewPath)
+    end
+    fs.makeDir = makeDirInVM
+
+    FsInVM.getDrive = fs.getDrive
+    local function getDriveInVM(path)
+        NewPath = LocOFVMFiles .. path
+        INROM = string.find(path, RomLoc )
+        if INROM then
+            NewPath = path
+        end
+        commandHasBennRun("getDriveInVM",path)
+        return FsInVM.getDrive(NewPath)
+    end
+    fs.getDrive = getDriveInVM
+
+    FsInVM.getFreeSpace = fs.getFreeSpace
+    local function getFreeSpaceInVM(path)
+        NewPath = LocOFVMFiles .. path
+        INROM = string.find(path, RomLoc )
+        if INROM then
+            NewPath = path
+        end
+        commandHasBennRun("getFreeSpaceInVM",path)
+        return FsInVM.getFreeSpace(NewPath)
+    end
+    fs.getFreeSpace = getFreeSpaceInVM
+
+    FsInVM.delete = fs.delete
+    local function deleteInVM(path)
+        NewPath = LocOFVMFiles .. path
+        INROM = string.find(path, RomLoc )
+        if INROM then
+            NewPath = path
+        end
+        commandHasBennRun("deleteInVM",path)
+        return FsInVM.delete(NewPath)
+    end
+    fs.delete = deleteInVM
+
+    FsInVM.find = fs.find
+    local function findInVM(path)
+        NewPath = LocOFVMFiles .. path
+        INROM = string.find(path, RomLoc )
+        if INROM then
+            NewPath = path
+        end
+        commandHasBennRun("findInVM",path)
+        return FsInVM.find(NewPath)
+    end
+    fs.find = findInVM
+
+    FsInVM.getCapacity = fs.getCapacity
+    local function getCapacityINVM(path)
+        NewPath = LocOFVMFiles .. path
+        INROM = string.find(path, RomLoc )
+        if INROM then
+            NewPath = path
+        end
+        commandHasBennRun("getCapacityINVM",path)
+        return FsInVM.find(NewPath)
+    end
+    fs.getCapacity = getCapacityINVM
+
+    FsInVM.attributes = fs.attributes
+    local function attributesINVM(path)
+        NewPath = LocOFVMFiles .. path
+        INROM = string.find(path, RomLoc )
+        if INROM then
+            NewPath = path
+        end
+        commandHasBennRun("attributesINVM",path)
+        return FsInVM.find(NewPath)
+    end
+    fs.attributes = attributesINVM
+
+
+    FsInVM.move = fs.move
+    local function moveINVM(path, dest)
+        newdest = LocOFVMFiles .. dest
+        NewPath = LocOFVMFiles .. path
+        INROM = string.find(path, RomLoc )
+        if INROM then
+            NewPath = path
+        end
+        INROM = string.find(dest, RomLoc )
+        if INROM then
+            newdest = dest
+        end
+        commandHasBennRun("moveINVM",path,dest)
+        return FsInVM.find(NewPath, newdest)
+    end
+    fs.move = moveINVM
+
+    FsInVM.copy = fs.copy
+    local function copyINVM(path, dest)
+        newdest = LocOFVMFiles .. dest
+        NewPath = LocOFVMFiles .. path
+        INROM = string.find(path, RomLoc )
+        if INROM then
+            NewPath = path
+        end
+        INROM = string.find(dest, RomLoc )
+        if INROM then
+            newdest = dest
+        end
+        commandHasBennRun("copyINVM",path,dest)
+        return FsInVM.find(NewPath, newdest)
+    end
+    fs.copy = copyINVM
+
+
+    FsInVM.open = fs.open
+    local function openINVM(path, mode)
+        NewPath = LocOFVMFiles .. path
+        INROM = string.find(path, RomLoc )
+        if INROM then
+            NewPath = path
+        end
+        commandHasBennRun("openINVM",path,mode)
+        return FsInVM.open(NewPath, mode)
+    end
+    fs.open = openINVM
+end
+
+local function EndVm()
+    fs.list = FsInVM.list 
+    fs.getName = FsInVM.getName 
+    fs.getDir = FsInVM.getDir 
+    fs.getSize = FsInVM.getSize 
+    fs.exists = FsInVM.exists 
+    fs.isDir = FsInVM.isDir 
+    fs.isReadOnly = FsInVM.isReadOnly 
+    fs.makeDir = FsInVM.makeDir 
+    fs.getDrive = FsInVM.getDrive 
+    fs.getFreeSpace = FsInVM.getFreeSpace 
+    fs.delete = FsInVM.delete 
+    fs.find = FsInVM.find 
+    fs.getCapacity = FsInVM.getCapacity 
+    fs.attributes = FsInVM.attributes 
+    fs.move = FsInVM.move 
+    fs.copy = FsInVM.copy 
+    fs.open = FsInVM.open 
+end
+
 
 function CoroutineRunAppFunction()
     shell.run(ProgeamToRun)
     --says progeam has ended
     CloseCoroutineWindow = true
+end
+
+local function RunLoopForProgeam(Number,Input)
+    
+
+
+    local EventInput = {}
+    EventInput = Input
+    --cheeks if progeam is not hidden
+    if windowsTerm[Number] == nil then
+    else
+        --cheeks if mouse is down for moving window
+        if EventInput[1] == "mouse_drag" then
+            --cheeks if oyur mouse is over move butten
+            if windowsTerm[Number][3][1] - 1 == LastMouseClickX then
+            if windowsTerm[Number][3][2] - 1 == LastMouseClickY then
+                --sets it so your moving window
+                IsMoveingWindow[Number] = true
+            end
+            end
+            --cheeks if your moving window
+            if IsMoveingWindow[Number] then
+                --moves window to mouse
+                windowsTerm[Number][3][1] = EventInput[3] + 1
+                windowsTerm[Number][3][2] = EventInput[4] + 1
+            end
+            --cheeks if your moving from reshape butten
+            if windowsTerm[Number][3][3] + windowsTerm[Number][3][1] == LastMouseClickX then
+            if windowsTerm[Number][3][4] + windowsTerm[Number][3][2] == LastMouseClickY then
+                --sets to say your reshaping
+                IsResizingWindow[Number] = true
+            end
+            end
+            --cheeks if your reshaping
+            if IsResizingWindow[Number] then
+                --changes size
+                windowsTerm[Number][3][3] =  EventInput[3] - windowsTerm[Number][3][1]
+                windowsTerm[Number][3][4] =  EventInput[4] - windowsTerm[Number][3][2]
+            end
+            windowsTerm[Number][1].reposition(windowsTerm[Number][3][1],windowsTerm[Number][3][2],windowsTerm[Number][3][3],windowsTerm[Number][3][4])
+        else
+            --resets values if not mouse drag
+            IsMoveingWindow[Number] = false
+            IsResizingWindow[Number] = false
+        end
+        --tests for click
+        if EventInput[1] == "mouse_click" then
+            --if clicking on stop butten
+            if EventInput[3] == windowsTerm[Number][3][3] + windowsTerm[Number][3][1] then
+            if EventInput[4] == windowsTerm[Number][3][2] - 1 then
+                windowsTerm[Number][5] = not windowsTerm[Number][5]
+            end
+            end
+        end
+        
+        ProgeamEventInput = textutils.unserialise(textutils.serialise(EventInput))
+        --moves mouse to fix bug with mouse clicks
+        if ProgeamEventInput[1] == "mouse_click" or ProgeamEventInput[1] == "mouse_drag" or ProgeamEventInput[1] == "mouse_scroll" or ProgeamEventInput[1] == "mouse_up" then
+            ProgeamEventInput[3] = ProgeamEventInput[3] - windowsTerm[Number][3][1] + 1
+            ProgeamEventInput[4] =  ProgeamEventInput[4] - windowsTerm[Number][3][2] + 1
+        end
+
+
+
+        --cheeks if progeam is running
+        if windowsTerm[Number][5] == true then
+            --redricts all new drawing to window
+            term.redirect(windowsTerm[Number][1])
+            --says not to close window
+            CloseCoroutineWindow = false
+            local OldLocOFVMFiles = LocOFVMFiles
+            if (tonumber(windowsTerm[Number][6]) > 4) then
+                LocOFVMFiles = ""
+
+            end
+
+            
+            term.setCursorBlink(true)
+            local coroutineOutput = {}
+            local coroutineWorked = false
+            coroutineWorked, coroutineOutput = coroutine.resume(windowsTerm[Number][2], unpack(ProgeamEventInput))
+            local output = {}
+
+            
+            output = TestCoroutine(coroutineOutput,windowsTerm[Number][6])
+
+
+
+            if output then
+                RunLoopForProgeam(Number,output)
+            end
+            term.redirect(windowsTerm[Number][1])
+            LocOFVMFiles = OldLocOFVMFiles
+            --stops blinking
+            term.setCursorBlink(false)
+            --tests if progeam has finished
+            if CloseCoroutineWindow then
+                --delete window
+                --windowsTerm[Number] = nil
+            end
+        end
+    end
 end
 
 --for rendering a hadling each window
@@ -52,79 +535,13 @@ local function RunProgeamLoops()
     --for each window
     for i=1, #windowsTerm do
         --fixs up stuff for moniter mouse
-
-        
-
-        --cheeks if progeam is not hidden
-        if windowsTerm[i] == nil then
-        else
-            --cheeks if mouse is down for moving window
-            if NewEventOutput[1] == "mouse_drag" then
-                --cheeks if oyur mouse is over move butten
-                if windowsTerm[i][3][1] - 1 == LastMouseClickX then
-                if windowsTerm[i][3][2] - 1 == LastMouseClickY then
-                    --sets it so your moving window
-                    IsMoveingWindow[i] = true
-                end
-                end
-                --cheeks if your moving window
-                if IsMoveingWindow[i] then
-                    --moves window to mouse
-                    windowsTerm[i][3][1] = NewEventOutput[3] + 1
-                    windowsTerm[i][3][2] = NewEventOutput[4] + 1
-                end
-
-                --cheeks if your moving from reshape butten
-                if windowsTerm[i][3][3] + windowsTerm[i][3][1] == LastMouseClickX then
-                if windowsTerm[i][3][4] + windowsTerm[i][3][2] == LastMouseClickY then
-                    --sets to say your reshaping
-                    IsResizingWindow[i] = true
-                end
-                end
-
-                --cheeks if your reshaping
-                if IsResizingWindow[i] then
-                    --changes size
-                    windowsTerm[i][3][3] =  NewEventOutput[3] - windowsTerm[i][3][1]
-                    windowsTerm[i][3][4] =  NewEventOutput[4] - windowsTerm[i][3][2]
-                end
-
-                windowsTerm[i][1].reposition(windowsTerm[i][3][1],windowsTerm[i][3][2],windowsTerm[i][3][3],windowsTerm[i][3][4])
-            else
-                --resets values if not mouse drag
-                IsMoveingWindow[i] = false
-                IsResizingWindow[i] = false
-            end
-            --tests for click
-            if NewEventOutput[1] == "mouse_click" then
-                --if clicking on stop butten
-                if NewEventOutput[3] == windowsTerm[i][3][3] + windowsTerm[i][3][1] then
-                if NewEventOutput[4] == windowsTerm[i][3][2] - 1 then
-                    windowsTerm[i][5] = not windowsTerm[i][5]
-                end
-                end
-            end
-            --cheeks if progeam is running
-            if windowsTerm[i][5] == true then
-                --redricts all new drawing to window
-                term.redirect(windowsTerm[i][1])
-                --says not to close window
-                CloseCoroutineWindow = false
-                coroutine.resume(windowsTerm[i][2], unpack(NewEventOutput))
-                --stops blinking
-                term.setCursorBlink(false)
-                --tests if progeam has finished
-                if CloseCoroutineWindow then
-                    --delete window
-                    windowsTerm[i] = nil
-                end
-            end
-        end
+        RunLoopForProgeam(i,NewEventOutput)
     end
 
     term.redirect(BackGroundTerm)
     --BackGroundTerm.restoreCursor()
 end
+
 
 local function DrawBackground()
     term.setBackgroundColour(colors.lightBlue)
@@ -150,7 +567,19 @@ local function DrawBackground()
     end
 end
 
+local function DrawOverApps()
 
+    for i=1, #windowsTerm do
+        term.setCursorPos(i,1)
+        term.setBackgroundColor(PermLevelColorCodes[tonumber(windowsTerm[i][6])])
+        term.setTextColor(colors.black)
+        term.write(windowsTerm[i][6])
+    end
+    term.setBackgroundColor(colors.black)
+    term.setTextColor(colors.white)
+
+
+end
 
 function DrawAppLuncher()
     --draws background and app launahcer icon
@@ -161,14 +590,14 @@ function DrawAppLuncher()
     term.setCursorPos(ScreenWidth / 2 - 6, 2)
     term.write("app launcher")
     --looks for Shortcuts
-    ProgeamsFound = fs.list("/UserData/ProgramShortcuts/")
+    ProgeamsFound = fs.list("ProgramShortcuts/")
     for i=1, #ProgeamsFound do
         --gets postion of new shortcut
         offsetX = i - 1
         offsetX = offsetX * 8 + 3
         offsetY = 4
         --loads data for it
-        settings.load("/UserData/ProgramShortcuts/" .. ProgeamsFound[i])
+        settings.load("ProgramShortcuts/" .. ProgeamsFound[i])
         --loads icon data
         IconData = settings.get("Icon")
         for IconX=1, 6 do 
@@ -200,7 +629,6 @@ function AppLuncher()
         while NewEventOutput[1] == "setting_changed" do
             NewEventOutput = {os.pullEventRaw()}
         end 
-        print(NewEventOutput[1])
         local Event = NewEventOutput[1]
         local ClickName = NewEventOutput[2]
         local ClickXPos = NewEventOutput[3]
@@ -218,13 +646,15 @@ function AppLuncher()
                     -- cheeks if the item is not out of bounds
                     if ItemClickedOn > 0 then
                         --gets data about shortcuts
-                        ProgeamsFound = fs.list("/UserData/ProgramShortcuts/")
+                        ProgeamsFound = fs.list("ProgramShortcuts/")
                         if FlooredItemClickedOn > #ProgeamsFound then
                         else
                             --gets shortcut locastion
-                            settings.load("/UserData/ProgramShortcuts/" .. ProgeamsFound[FlooredItemClickedOn])
+                            settings.load("ProgramShortcuts/" .. ProgeamsFound[FlooredItemClickedOn])
                             ShortcutName = settings.get("shortcut loc")
-                            OpenNewApp(ShortcutName)
+                            	
+                            local PermLevelToLoad = settings.get("boot perm level")
+                            OpenNewApp(ShortcutName,PermLevelToLoad)
                             return
                         end
                     end
@@ -242,34 +672,44 @@ end
 
 
 
-if fs.exists(StartupPath) then
-    local FilesToStartup = fs.list(StartupPath)
+
+
+--starts vm so user can only edit there files
+StartVm()
+
+
+if FsInVM.exists(StartupPath) then
+    local FilesToStartup = FsInVM.list(StartupPath)
     for i=1, #FilesToStartup do
-        OpenNewApp(StartupPath .. FilesToStartup[i])
+        OpenNewApp(StartupPath .. FilesToStartup[i],1)
     end
     
 else
-    fs.makeDir(StartupPath)
-    os.reboot()
+    FsInVM.makeDir(StartupPath)
 end
 
-
+if FsInVM.exists(UserFilesPath) == false then
+    FsInVM.makeDir(UserFilesPath)
+end
+if FsInVM.exists(UserFilesPath .. "ProgramData") == false then
+    FsInVM.makeDir(UserFilesPath)
+end
 
 while true do
+    
     DrawBackground()
+    DrawOverApps()
     NewEventOutput = {os.pullEventRaw()}
     RunProgeamLoops()
     
-    --os.sleep(0.01)
 end
 
 
 
---TODO: fix when open app luancher apps with os.sleep just break
 --todo:
 --add muapule desktop support
 --add taskbar for running apps
---add task amnger
+--add task manger
 --add app store
 -- add files on desktop
 -- fix setting_changed broken while in app lunahcer
