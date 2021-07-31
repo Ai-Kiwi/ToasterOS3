@@ -4,13 +4,13 @@ local args = {...}
 
 local function UpdateComputer()
     local moniterwidth, moniterhight = term.getSize()
-    local amttoinstall = 8
+    local amttoinstall = 6
     local amtinstalled = 0
     local percentDone = 0
     local iconNumberPercentUpto = 0
     local OldCurserPosY = 2
     local OldCurserPosX = 1
-    local RowsToTakeUp = math.floor(150 / moniterwidth) + 1
+    local RowsToTakeUp = math.floor(200 / moniterwidth) + 1
     local RowsPerPage = math.floor(moniterhight / RowsToTakeUp)
     if args[1] == "true" then
         shell.run("delete /*")
