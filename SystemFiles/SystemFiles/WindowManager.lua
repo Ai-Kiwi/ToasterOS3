@@ -138,11 +138,11 @@ local function TestCoroutine(coroutineOutput,ProgeamPerms)
             end
             
             -- secand : loc thrid : is system app
-            --coroutine.yield({"RunFile","FileExplorer.lua",true})
-            --coroutine.yield({"RunFile","rom/programs/fun/worm.lua",false})
+            --coroutine.yield({"RunFile","FileExplorer.lua","true"})
+            --coroutine.yield({"RunFile","rom/programs/fun/worm.lua","false"})
             if coroutineOutput[1] == "RunFile" then
                 if coroutineOutput[2] then
-                    if coroutineOutput[3] == true then
+                    if coroutineOutput[3] == "true" then
                         PermLevelToload = 5
                         LocToOpen = "SystemFiles/SystemPrograms/" .. coroutineOutput[2]
                     else
@@ -413,6 +413,7 @@ end
 
 function CoroutineRunAppFunction()
     shell.run(ProgeamToRun)
+    os.sleep(1)
     --says progeam has ended
     CloseCoroutineWindow = true
 end
@@ -504,21 +505,21 @@ local function RunLoopForProgeam(Number,Input)
 
             
             output = TestCoroutine(coroutineOutput,windowsTerm[Number][6])
-
+            if CloseCoroutineWindow then
+                --delete window
+                windowsTerm[Number] = nil
+            end
 
 
             if output then
                 RunLoopForProgeam(Number,output)
             end
-            term.redirect(windowsTerm[Number][1])
+            
             LocOFVMFiles = OldLocOFVMFiles
             --stops blinking
             term.setCursorBlink(false)
             --tests if progeam has finished
-            if CloseCoroutineWindow then
-                --delete window
-                windowsTerm[Number] = nil
-            end
+
         end
     end
 end
