@@ -136,6 +136,3 @@ if args[2] == "true" then
 else
     UpdateComputer()
 end
-
-
-
