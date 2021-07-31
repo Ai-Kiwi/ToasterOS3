@@ -1,7 +1,7 @@
 local ScreenWidth,  ScreenHight = term.getSize()
 
-if FsInVM.exists("UserData") == false then
-    FsInVM.makeDir("UserData")
+if fs.exists("UserData") == false then
+    fs.makeDir("UserData")
 end
 
 Accounts = fs.list("UserData")
