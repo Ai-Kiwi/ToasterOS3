@@ -112,6 +112,12 @@ if args[2] == "true" then
             print("upto date")
             term.setTextColor(colors.white)
         else
+            if github_file == nil then
+                term.setTextColor(colors.red)
+                print("failed cheeking for updates updating anyway")
+                os.sleep(1)
+                UpdateComputer()
+            end
             UpdateComputer()
         end
 
