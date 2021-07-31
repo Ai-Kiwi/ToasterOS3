@@ -107,9 +107,9 @@ if args[2] == "true" then
     if GithubFileLink then
         github_file = GithubFileLink.readAll()
         GithubFileLink.close()
-        local f = fs.open("ToasterOsVerson", "r")
-        local LocalVerson = f:readAll()
-        f:close()
+        settings.load("ToasterOsbios")
+        local LocalVerson = settings.get("verson")
+        
         
         
         if github_file == LocalVerson then
@@ -117,9 +117,9 @@ if args[2] == "true" then
             print("upto date")
             term.setTextColor(colors.white)
         else
-            local f = fs.open("ToasterOsVerson", "w")
-            f:write(github_file)
-            f:close()
+            
+            setting.set("verson",github_file)
+            settings.save("ToasterOsbios")
             UpdateComputer()
         end
 
