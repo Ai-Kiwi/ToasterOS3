@@ -1,5 +1,9 @@
 local ScreenWidth,  ScreenHight = term.getSize()
 
+if FsInVM.exists("UserData") == false then
+    FsInVM.makeDir("UserData")
+end
+
 Accounts = fs.list("UserData")
 
 term.setBackgroundColor(colors.black)
