@@ -82,6 +82,16 @@ local function commandHasBennRun()
     
 end
 
+--fixing windows term
+local function fixwindowsTerm(input_windowsTerm)
+    local NewTable = {}
+    for i, v in pairs(input_windowsTerm) do
+        table.insert(NewTable, v)
+    end
+    return NewTable
+end
+
+
 --script for opening files
 local function OpenNewApp(ProgeamLoc,PermLevel)
 
@@ -112,12 +122,15 @@ local function TestCoroutine(coroutineOutput,ProgeamPerms)
 
 
         end
-        if ProgeamPermsLevel > 2 then -- higher level progeam
+        if ProgeamPermsLevel > 2 then -- full level progeam
 
 
         end
-        if ProgeamPermsLevel > 1 then -- full system perm
-
+        if ProgeamPermsLevel > 1 then -- higher system perm
+            if coroutineOutput[1] == "UserName" then
+                os.reboot()
+                return {"ToasterOSCommand","UserName",UserLogined}
+            end
 
         end
         if ProgeamPermsLevel > 0 then -- its a nomeal progeam
@@ -418,7 +431,7 @@ function CoroutineRunAppFunction()
     CloseCoroutineWindow = true
 end
 
-local function RunLoopForProgeam(Number,Input)
+local function RunLoopForProgeam(Number,Input,RunEvent)
     
 
 
@@ -454,6 +467,8 @@ local function RunLoopForProgeam(Number,Input)
                 --changes size
                 windowsTerm[Number][3][3] =  EventInput[3] - windowsTerm[Number][3][1]
                 windowsTerm[Number][3][4] =  EventInput[4] - windowsTerm[Number][3][2]
+                if windowsTerm[Number][3][3] < 5 then windowsTerm[Number][3][3] = 5 end                
+                if windowsTerm[Number][3][4] < 5 then windowsTerm[Number][3][4] = 5 end
             end
             windowsTerm[Number][1].reposition(windowsTerm[Number][3][1],windowsTerm[Number][3][2],windowsTerm[Number][3][3],windowsTerm[Number][3][4])
         else
@@ -463,12 +478,28 @@ local function RunLoopForProgeam(Number,Input)
         end
         --tests for click
         if EventInput[1] == "mouse_click" then
-            --if clicking on stop butten
+            --if clicking on pause butten
             if EventInput[3] == windowsTerm[Number][3][3] + windowsTerm[Number][3][1] then
             if EventInput[4] == windowsTerm[Number][3][2] - 1 then
                 windowsTerm[Number][5] = not windowsTerm[Number][5]
             end
             end
+            --if clicking on stop butten
+            if EventInput[3] == windowsTerm[Number][3][3] + windowsTerm[Number][3][1] -1 then
+            if EventInput[4] == windowsTerm[Number][3][2] - 1 then
+                windowsTerm[Number] = nil
+                windowsTerm = fixwindowsTerm(windowsTerm)
+                return
+            end
+            end
+            --cheeks if its on the progeam
+            if EventInput[3] + 2 > windowsTerm[Number][3][1] and EventInput[3] - 1 < windowsTerm[Number][3][3] + windowsTerm[Number][3][1] then
+            if EventInput[4] + 2 > windowsTerm[Number][3][2] and EventInput[4] - 1 < windowsTerm[Number][3][4] + windowsTerm[Number][3][2] then
+                SelectedWindow = Number
+            end
+            end
+        
+        
         end
         
         ProgeamEventInput = {}
@@ -485,7 +516,7 @@ local function RunLoopForProgeam(Number,Input)
 
 
         --cheeks if progeam is running
-        if windowsTerm[Number][5] == true then
+        if windowsTerm[Number][5] == true and RunEvent then
             --redricts all new drawing to window
             term.redirect(windowsTerm[Number][1])
             --says not to close window
@@ -504,17 +535,19 @@ local function RunLoopForProgeam(Number,Input)
             local output = {}
 
             
-            output = TestCoroutine(coroutineOutput,windowsTerm[Number][6])
-            if CloseCoroutineWindow then
-                --delete window
-                windowsTerm[Number] = nil
-            end
+                output = TestCoroutine(coroutineOutput,windowsTerm[Number][6])
+                if CloseCoroutineWindow then
+                    --delete window
+                    windowsTerm[Number] = nil
+                    windowsTerm = fixwindowsTerm(windowsTerm)
+                end
 
 
-            if output then
-                RunLoopForProgeam(Number,output)
-            end
+                if output then
+                    RunLoopForProgeam(Number,output,false)
+                end
             
+
             LocOFVMFiles = OldLocOFVMFiles
             --stops blinking
             term.setCursorBlink(false)
@@ -537,14 +570,31 @@ local function RunProgeamLoops()
     elseif NewEventOutput[1] == "mouse_click" then
         LastMouseClickX = NewEventOutput[3]
         LastMouseClickY = NewEventOutput[4]
-        
-        
+    elseif NewEventOutput[1] == "terminate" then
+        windowsTerm[SelectedWindow] = nil
+        windowsTerm = fixwindowsTerm(windowsTerm)
+    end
+    local EventOnlyForScreenMouseOver = false
+    if NewEventOutput[1] == "key" or NewEventOutput[1] == "key_up" or NewEventOutput[1] == "paste" or NewEventOutput[1] == "mouse_click" or NewEventOutput[1] == "mouse_drag" or NewEventOutput[1] == "mouse_scroll" or NewEventOutput[1] == "mouse_up" or NewEventOutput[1] == "char" then
+        EventOnlyForScreenMouseOver = true
+
+    else
+        EventOnlyForScreenMouseOver = false
     end
 
     --for each window
     for i=1, #windowsTerm do
-        --fixs up stuff for moniter mouse
-        RunLoopForProgeam(i,NewEventOutput)
+        if windowsTerm[i] == nil then
+        else
+            if EventOnlyForScreenMouseOver then
+            --fixs up stuff for moniter mouse
+                local ShouldRun = i == SelectedWindow
+                RunLoopForProgeam(i,NewEventOutput,ShouldRun)
+            else
+                RunLoopForProgeam(i,NewEventOutput,true)
+            end
+
+        end
     end
 
     term.redirect(BackGroundTerm)
@@ -558,19 +608,26 @@ local function DrawBackground()
     --paintutils.drawFilledBox(1,1,ScreenWidth,ScreenHight, colors.lightBlue)
     --redraw Windows
     for i=1, #windowsTerm do
-        --cheeks if progream is not hidden
-        if windowsTerm[i][4] == true then
-            --redraws window
-            windowsTerm[i][1].redraw()
-            paintutils.drawBox(windowsTerm[i][3][1] - 1,windowsTerm[i][3][2] - 1,windowsTerm[i][3][3] + windowsTerm[i][3][1],windowsTerm[i][3][4] + windowsTerm[i][3][2],colors.yellow)
-            --draws reshape and move buttens
-            paintutils.drawPixel(windowsTerm[i][3][1] - 1,windowsTerm[i][3][2] - 1, colors.orange) --move butten
-            paintutils.drawPixel(windowsTerm[i][3][3] + windowsTerm[i][3][1],windowsTerm[i][3][4] + windowsTerm[i][3][2],colors.green) --resize butten
-            --draws close and minamize and pause buttens
-            if windowsTerm[i][5] == true then
-                paintutils.drawPixel(windowsTerm[i][3][3] + windowsTerm[i][3][1],windowsTerm[i][3][2] - 1,colors.red) -- stop botten
-            else
-                paintutils.drawPixel(windowsTerm[i][3][3] + windowsTerm[i][3][1],windowsTerm[i][3][2] - 1,colors.green) -- resume botten
+        if windowsTerm[i] == nil then
+        else
+            --cheeks if progream is not hidden
+            if windowsTerm[i][4] == true then
+                --redraws window
+                windowsTerm[i][1].redraw()
+                paintutils.drawBox(windowsTerm[i][3][1] - 1,windowsTerm[i][3][2] - 1,windowsTerm[i][3][3] + windowsTerm[i][3][1],windowsTerm[i][3][4] + windowsTerm[i][3][2],colors.yellow)
+                if i == SelectedWindow then
+                    paintutils.drawLine(windowsTerm[i][3][1] - 1,windowsTerm[i][3][2] - 1,windowsTerm[i][3][1] + windowsTerm[i][3][3] - 1, windowsTerm[i][3][2] - 1,colors.green )
+                end
+                --draws reshape and move buttens
+                paintutils.drawPixel(windowsTerm[i][3][1] - 1,windowsTerm[i][3][2] - 1, colors.orange) --move butten
+                paintutils.drawPixel(windowsTerm[i][3][3] + windowsTerm[i][3][1],windowsTerm[i][3][4] + windowsTerm[i][3][2],colors.green) --resize butten
+                --draws close and minamize and pause buttens
+                if windowsTerm[i][5] == true then
+                    paintutils.drawPixel(windowsTerm[i][3][3] + windowsTerm[i][3][1],windowsTerm[i][3][2] - 1,colors.purple) -- stop botten
+                else
+                    paintutils.drawPixel(windowsTerm[i][3][3] + windowsTerm[i][3][1],windowsTerm[i][3][2] - 1,colors.green) -- resume botten
+                end
+                paintutils.drawPixel(windowsTerm[i][3][3] + windowsTerm[i][3][1] - 1,windowsTerm[i][3][2] - 1,colors.red) --quit app butten
             end
         end
     end
@@ -579,10 +636,13 @@ end
 local function DrawOverApps()
 
     for i=1, #windowsTerm do
-        term.setCursorPos(i,1)
-        term.setBackgroundColor(PermLevelColorCodes[tonumber(windowsTerm[i][6])])
-        term.setTextColor(colors.black)
-        term.write(windowsTerm[i][6])
+        if windowsTerm[i] == nil then
+        else
+            term.setCursorPos(i,1)
+            term.setBackgroundColor(PermLevelColorCodes[tonumber(windowsTerm[i][6])])
+            term.setTextColor(colors.black)
+            term.write(windowsTerm[i][6])
+        end
     end
     term.setBackgroundColor(colors.black)
     term.setTextColor(colors.white)
