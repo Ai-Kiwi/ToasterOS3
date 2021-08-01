@@ -1,5 +1,5 @@
 local ScreenWidth,  ScreenHight = term.getSize()
-
+local TaskBarOffset = 0
 if fs.exists("UserData") == false then
     fs.makeDir("UserData")
 end
@@ -74,9 +74,32 @@ local LocToOpen = ""
 local PermLevelToload = 0
 local ToasterOsVerson = 0.1
 local ProgeamEventInput = {}
+local ToasterOSSettings = {}
+
+local function UpdateSettingValue(ValueName,DefaltValue)
+    if settings.get(ValueName) == nil then
+        settings.set(ValueName,DefaltValue)
+        settings.save("UserData/" .. UserLogined .. "/Settings.toast")
+    end
+    return settings.get(ValueName)
+end 
+
+
+local function UpdateSettings()
+    settings.load("UserData/" .. UserLogined .. "/Settings.toast")
+    ToasterOSSettings.CenterTaskBar = UpdateSettingValue("center task bar",1)
 
 
 
+end
+
+
+local function SudoRunFunction(FunctionToRun)
+    local OldLocOFVMFiles = LocOFVMFiles
+    LocOFVMFiles = ""
+    FunctionToRun()
+    LocOFVMFiles = OldLocOFVMFiles
+end
 
 local function commandHasBennRun()
     
@@ -123,12 +146,16 @@ local function TestCoroutine(coroutineOutput,ProgeamPerms)
 
         end
         if ProgeamPermsLevel > 2 then -- full level progeam
-
+            --coroutine.yield({"RefeshSettings"})
+            if coroutineOutput[1] == "RefeshSettings" then
+                SudoRunFunction(UpdateSettings)
+                return {"ToasterOSCommand","UserName","RefeshSettings"}
+            end
 
         end
         if ProgeamPermsLevel > 1 then -- higher system perm
+            --coroutine.yield({"UserName"})
             if coroutineOutput[1] == "UserName" then
-                os.reboot()
                 return {"ToasterOSCommand","UserName",UserLogined}
             end
 
@@ -438,8 +465,7 @@ local function RunLoopForProgeam(Number,Input,RunEvent)
     local EventInput = {}
     EventInput = Input
     --cheeks if progeam is not hidden
-    if windowsTerm[Number] == nil then
-    else
+    if windowsTerm[Number][4] == true then
         --cheeks if mouse is down for moving window
         if EventInput[1] == "mouse_drag" then
             --cheeks if oyur mouse is over move butten
@@ -492,6 +518,7 @@ local function RunLoopForProgeam(Number,Input,RunEvent)
                 return
             end
             end
+    
             --cheeks if its on the progeam
             if EventInput[3] + 2 > windowsTerm[Number][3][1] and EventInput[3] - 1 < windowsTerm[Number][3][3] + windowsTerm[Number][3][1] then
             if EventInput[4] + 2 > windowsTerm[Number][3][2] and EventInput[4] - 1 < windowsTerm[Number][3][4] + windowsTerm[Number][3][2] then
@@ -501,12 +528,12 @@ local function RunLoopForProgeam(Number,Input,RunEvent)
         
         
         end
-        
+    end
+
         ProgeamEventInput = {}
-        for k, v in pairs(EventInput) do --Don't use ipairs here because that only works with numeric inexes
-            ProgeamEventInput[k] = v --Here we copy the key and the value from the original table
+        for k, v in pairs(EventInput) do
+            ProgeamEventInput[k] = v
         end
-        
         --moves mouse to fix bug with mouse clicks
         if ProgeamEventInput[1] == "mouse_click" or ProgeamEventInput[1] == "mouse_drag" or ProgeamEventInput[1] == "mouse_scroll" or ProgeamEventInput[1] == "mouse_up" then
             ProgeamEventInput[3] = ProgeamEventInput[3] - windowsTerm[Number][3][1] + 1
@@ -544,7 +571,7 @@ local function RunLoopForProgeam(Number,Input,RunEvent)
 
 
                 if output then
-                    RunLoopForProgeam(Number,output,false)
+                    RunLoopForProgeam(Number,output,true)
                 end
             
 
@@ -554,7 +581,7 @@ local function RunLoopForProgeam(Number,Input,RunEvent)
             --tests if progeam has finished
 
         end
-    end
+    
 end
 
 --for rendering a hadling each window
@@ -581,6 +608,17 @@ local function RunProgeamLoops()
     else
         EventOnlyForScreenMouseOver = false
     end
+    --toggles hide app
+    if NewEventOutput[1] == "mouse_click" then
+    if NewEventOutput[4] == ScreenHight then
+        if windowsTerm[tonumber(NewEventOutput[3]) - TaskBarOffset] == nil then
+        else
+            windowsTerm[NewEventOutput[3] - TaskBarOffset][4] = not windowsTerm[NewEventOutput[3] - TaskBarOffset][4]
+        end
+
+    end
+    end
+
 
     --for each window
     for i=1, #windowsTerm do
@@ -634,12 +672,25 @@ local function DrawBackground()
 end
 
 local function DrawOverApps()
+    if ToasterOSSettings.CenterTaskBar == "3" then
+        TaskBarOffset = ScreenWidth - #windowsTerm
+    elseif ToasterOSSettings.CenterTaskBar == "2" then
+        TaskBarOffset = math.floor(ScreenWidth / 2) - math.floor(#windowsTerm / 2)
+    else
+        TaskBarOffset = 0
+    end
 
+
+    paintutils.drawBox(1,ScreenHight,ScreenWidth,ScreenHight,colors.white )
     for i=1, #windowsTerm do
         if windowsTerm[i] == nil then
         else
-            term.setCursorPos(i,1)
-            term.setBackgroundColor(PermLevelColorCodes[tonumber(windowsTerm[i][6])])
+            term.setCursorPos(i + TaskBarOffset,ScreenHight)
+            if windowsTerm[i][4] then
+                term.setBackgroundColor(colors.green)
+            else
+                term.setBackgroundColor(colors.red)
+            end
             term.setTextColor(colors.black)
             term.write(windowsTerm[i][6])
         end
@@ -741,7 +792,7 @@ end
 
 
 
-
+UpdateSettings()
 
 --starts vm so user can only edit there files
 StartVm()
