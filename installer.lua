@@ -44,6 +44,7 @@ while true do
             term.setBackgroundColor(colors.black)
             term.setTextColor(colors.white)
             shell.run("wget run https://raw.githubusercontent.com/Ai-Kiwi/ToasterOS3/main/Updater.lua true false")
+            os.reboot()
             return
         end
         if event3 == MiddleOfScreenY + 1 then
