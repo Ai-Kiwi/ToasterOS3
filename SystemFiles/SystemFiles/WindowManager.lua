@@ -75,6 +75,10 @@ local PermLevelToload = 0
 local ToasterOsVerson = 0.1
 local ProgeamEventInput = {}
 local ToasterOSSettings = {}
+local BackGroundColor = colors.lightBlue
+local FunctionRefreshApps = true
+local SystemTaskBarApps = {}
+
 
 local function UpdateSettingValue(ValueName,DefaltValue)
     if settings.get(ValueName) == nil then
@@ -88,7 +92,6 @@ end
 local function UpdateSettings()
     settings.load("UserData/" .. UserLogined .. "/Settings.toast")
     ToasterOSSettings.CenterTaskBar = UpdateSettingValue("center task bar",1)
-
 
 
 end
@@ -113,6 +116,7 @@ local function fixwindowsTerm(input_windowsTerm)
     end
     return NewTable
 end
+
 
 
 --script for opening files
@@ -641,8 +645,7 @@ end
 
 
 local function DrawBackground()
-    term.setBackgroundColour(colors.lightBlue)
-    term.clear()
+
     --paintutils.drawFilledBox(1,1,ScreenWidth,ScreenHight, colors.lightBlue)
     --redraw Windows
     for i=1, #windowsTerm do
@@ -673,19 +676,26 @@ end
 
 local function DrawOverApps()
     if ToasterOSSettings.CenterTaskBar == "3" then
-        TaskBarOffset = ScreenWidth - #windowsTerm
+        TaskBarOffset = ScreenWidth - (#windowsTerm + #SystemTaskBarApps)
     elseif ToasterOSSettings.CenterTaskBar == "2" then
-        TaskBarOffset = math.floor(ScreenWidth / 2) - math.floor(#windowsTerm / 2)
+        TaskBarOffset = math.floor(ScreenWidth / 2) - math.floor((#windowsTerm + # SystemTaskBarApps) / 2)
     else
         TaskBarOffset = 0
     end
 
-
+    --SystemTaskBarApps
     paintutils.drawBox(1,ScreenHight,ScreenWidth,ScreenHight,colors.white )
+    for i=1, #SystemTaskBarApps do
+        term.setBackgroundColor(colors.blue)
+        term.setTextColor(colors.black)
+        term.write( )
+
+    end
+    
     for i=1, #windowsTerm do
         if windowsTerm[i] == nil then
         else
-            term.setCursorPos(i + TaskBarOffset,ScreenHight)
+            term.setCursorPos(i + TaskBarOffset + #SystemTaskBarApps,ScreenHight)
             if windowsTerm[i][4] then
                 term.setBackgroundColor(colors.green)
             else
@@ -711,11 +721,20 @@ function DrawAppLuncher()
     term.write("app launcher")
     --looks for Shortcuts
     ProgeamsFound = fs.list("ProgramShortcuts/")
+    local AmtCanFitOnList = math.floor((ScreenWidth - 6) / 8)
     for i=1, #ProgeamsFound do
+        local RowNumber = math.floor((i - 1) / AmtCanFitOnList)
         --gets postion of new shortcut
         offsetX = i - 1
         offsetX = offsetX * 8 + 3
-        offsetY = 4
+        offsetY = 4 + (RowNumber * 6)
+        offsetX = offsetX - (AmtCanFitOnList * 8 * RowNumber)
+
+
+        
+
+
+        --ScreenWidth
         --loads data for it
         settings.load("ProgramShortcuts/" .. ProgeamsFound[i])
         --loads icon data
@@ -729,6 +748,8 @@ function DrawAppLuncher()
                 WhereToLook = WhereToLook - 6
                 WhereToLook = WhereToLook + IconX
                 WhereToLook = WhereToLook * 3
+
+                
                 --draws pixel
                 term.setTextColour(IconData[WhereToLook - 2])
                 term.setBackgroundColour(IconData[WhereToLook - 1])
@@ -744,7 +765,7 @@ function DrawAppLuncher()
 end
 function AppLuncher()
     while true do
-        
+        local AmtCanFitOnList = math.floor((ScreenWidth - 6) / 8)
         NewEventOutput = {os.pullEventRaw()}
         while NewEventOutput[1] == "setting_changed" do
             NewEventOutput = {os.pullEventRaw()}
@@ -752,7 +773,7 @@ function AppLuncher()
         local Event = NewEventOutput[1]
         local ClickName = NewEventOutput[2]
         local ClickXPos = NewEventOutput[3]
-        local ClickUPos = NewEventOutput[4]
+        local ClickYPos = NewEventOutput[4]
 
         if Event == "mouse_click" then
             if ClickName == 1 then
@@ -760,7 +781,10 @@ function AppLuncher()
                 ItemClickedOn = ClickXPos - 4
                 ItemClickedOn = ItemClickedOn / 8
                 ItemClickedOn = ItemClickedOn + 1
+                --adds stuff for diffent rows
+                ItemClickedOn = ItemClickedOn + (math.floor((ClickYPos - 5) / 6) * AmtCanFitOnList)
                 FlooredItemClickedOn = math.floor(ItemClickedOn)
+
                 --cheeks if item is not inbetween 2 items
                 if ItemClickedOn - FlooredItemClickedOn < 0.7 then
                     -- cheeks if the item is not out of bounds
@@ -775,6 +799,7 @@ function AppLuncher()
                             	
                             local PermLevelToLoad = settings.get("boot perm level")
                             OpenNewApp(ShortcutName,PermLevelToLoad)
+                            FunctionRefreshApps = true
                             return
                         end
                     end
@@ -782,12 +807,14 @@ function AppLuncher()
             end
         elseif Event == "key" then
             if ClickName == keys.backspace or ClickName == keys.home then
+                FunctionRefreshApps = true
                 return
             end
         end
         RunProgeamLoops()
         DrawAppLuncher()
     end
+
 end
 
 
@@ -816,7 +843,14 @@ if FsInVM.exists(UserFilesPath .. "ProgramData") == false then
 end
 
 while true do
-    
+    if NewEventOutput == nil then
+    else    
+    if NewEventOutput[1] == "mouse_click" or NewEventOutput[1] == "mouse_drag" or FunctionRefreshApps == true then
+        term.setBackgroundColour(BackGroundColor)
+        term.clear()
+    end
+    end
+
     DrawBackground()
     DrawOverApps()
     NewEventOutput = {os.pullEventRaw()}
@@ -833,3 +867,6 @@ end
 --add app store
 -- add files on desktop
 -- fix setting_changed broken while in app lunahcer
+--add windows butten. 
+--replace pause butten with minamize, 
+--make a better login system
