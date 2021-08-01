@@ -1,138 +1,80 @@
-local args = {...}
---input 1 : clear pc frist 
---input 2 : cheek for update instead of just updating
-
-local function UpdateComputer()
-    local moniterwidth, moniterhight = term.getSize()
-    local amttoinstall = 6
-    local amtinstalled = 0
-    local percentDone = 0
-    local iconNumberPercentUpto = 0
-    local OldCurserPosY = 2
-    local OldCurserPosX = 1
-    local RowsToTakeUp = math.floor(200 / moniterwidth) + 1
-    local RowsPerPage = math.floor(moniterhight / RowsToTakeUp)
-    if args[1] == "true" then
-        shell.run("delete /*")
-    end
-
+local moniterwidth, moniterhight = term.getSize()
+local LoopsNeededToBoot = 3
+local function BackGroundFlash(ColorID,waittime)
+    term.setBackgroundColor(ColorID)
     term.clear()
-    term.setCursorPos(1,1)
-
-    local function InstallFromInternet(URL,LOC)
-
-        amtinstalled = amtinstalled + 1
-
-
-        --shows install progress bar
-        term.setCursorPos(2,1)
-        percentDone = amtinstalled / amttoinstall
-        term.setTextColor(colors.blue )
-
-        for i=1, moniterwidth - 4 do
-
-            iconNumberPercentUpto = i / (moniterwidth - 4)
-
-            if percentDone > iconNumberPercentUpto  then
-                term.write("#")
-            else
-                term.write("-")
-            end
-
-
-        end
-        term.setCursorPos(moniterwidth - 4,1)
-        term.write(percentDone * 100 .. "%   ")
-
-
-        term.setTextColor(colors.white )
-        term.setCursorPos(OldCurserPosX,OldCurserPosY)
-
-        
-        --installs
-        fs.delete(LOC)
-        
-        print("installing " .. URL .. " from github")
-        local GithubFileLink = http.get(URL)
-        if GithubFileLink then
-            github_file = GithubFileLink.readAll()
-            GithubFileLink.close()
-        else
-            term.setTextColor(colors.red)
-            print("error failed to dowload")
-            os.sleep(5)
-            
-        end
-        if github_file then
-            term.setTextColor(colors.green)
-            print("dowloaded now instlling")
-            fs.delete(LOC)
-            local f = io.open(LOC, "w")
-            f:write(github_file)
-            f:close()
-        end
-
-
-        
-
-        if math.floor(amtinstalled / RowsPerPage) == amtinstalled / RowsPerPage then
-            term.setCursorPos(1,2)
-            term.clear()
-        end
-
-        OldCurserPosX, OldCurserPosY = term.getCursorPos()
-
-
-
-
-    end
-
-
-
-    fs.delete("ToasterOSUpdater")
-    InstallFromInternet("https://raw.githubusercontent.com/Ai-Kiwi/ToasterOS3/main/Updater.lua","ToasterOSUpdater.lua")
-    --core system files
-    InstallFromInternet("https://raw.githubusercontent.com/Ai-Kiwi/ToasterOS3/main/SystemFiles/startup.lua","startup.lua")
-    InstallFromInternet("https://raw.githubusercontent.com/Ai-Kiwi/ToasterOS3/main/SystemFiles/SystemFiles/CreateAppShortcut.lua","SystemFiles/CreateAppShortcut.lua")
-    InstallFromInternet("https://raw.githubusercontent.com/Ai-Kiwi/ToasterOS3/main/SystemFiles/SystemFiles/Usermaker.lua","SystemFiles/Usermaker.lua")
-    InstallFromInternet("https://raw.githubusercontent.com/Ai-Kiwi/ToasterOS3/main/SystemFiles/SystemFiles/WindowManager.lua","SystemFiles/WindowManager.lua")
-    --system apps
-    InstallFromInternet("https://raw.githubusercontent.com/Ai-Kiwi/ToasterOS3/main/SystemFiles/SystemFiles/SystemPrograms/FileExplorer.lua","SystemFiles/SystemPrograms/FileExplorer.lua")
-
+    os.sleep(waittime)
 end
 
-if args[2] == "true" then
-    print("Cheeking for updates")
-    local GithubFileLink = http.get("https://raw.githubusercontent.com/Ai-Kiwi/ToasterOS3/main/verson")
-    if GithubFileLink then
-        github_file = GithubFileLink.readAll()
-        GithubFileLink.close()
-        settings.load("ToasterOSbios")
-        local LocalVerson = settings.get("verson installed from cloud")
-        
-        
-        
-        if github_file == LocalVerson then
-            term.setTextColor(colors.green)
-            print("upto date")
-            term.setTextColor(colors.white)
-        else
-            
-            settings.set("verson installed from cloud",github_file)
-            settings.save("ToasterOSbios")
-            UpdateComputer()
-        end
-
-    else
+local function LoadIntoOS()
+    shell.run("ToasterOSUpdater.lua false true")
+    
+    
+    BackGroundFlash(colors.black,0.05)
+    BackGroundFlash(colors.gray,0.05)
+    BackGroundFlash(colors.lightGray,0.05)
+    BackGroundFlash(colors.white,0.05)
+    BackGroundFlash(colors.lightBlue,0.05)
+    BackGroundFlash(colors.blue,0.05)
+    
+    while true do
+        shell.run("SystemFiles/WindowManager.lua")
+        term.clear()
+        term.setCursorPos(1,1)
         term.setTextColor(colors.red)
-        print("failed cheeking for updates")
-        os.sleep(5)
+        term.setBackgroundColor(colors.black)
+        term.write("a big error has happen we will now boot you into toaster os installer soo you cna fix it")
+        term.write("enter to continue")
+        read()
+        shell.run("wget run https://raw.githubusercontent.com/Ai-Kiwi/ToasterOS3/main/installer.lua")
+    end
+end
+term.clear()
+term.setCursorPos(1,1)
+
+os.pullEvent = os.pullEventRaw
+
+--loads in bios settings
+settings.load("ToasterOSbios")
+LoopsNeededToBoot = settings.get("Time before booting")
+if LoopsNeededToBoot == nil then LoopsNeededToBoot = 3 settings.set("Time before booting",LoopsNeededToBoot) end
+settings.save("ToasterOSbios")
+
+
+
+
+
+--boots into os
+print("press F6 for bios, booting in " .. LoopsNeededToBoot .. "s")
+while true do
+
+    local TimeID = os.startTimer(1)
+    EventName, Event1, Event2 = os.pullEvent()
+    if EventName == "key" then
+        if Event1 == keys.f6 then
+
+        end
+
+    elseif EventName == "timer" then
+        LoopsNeededToBoot = LoopsNeededToBoot - 1
+        print("press F6 for bios, booting in " .. LoopsNeededToBoot .. "s")
+        if LoopsNeededToBoot < 1 then
+            LoadIntoOS()
+            printError("loading into os failed")
+            os.sleep(2)
+            shell.run("wget run https://raw.githubusercontent.com/Ai-Kiwi/ToasterOS3/main/installer.lua")
+        end
         
     end
-
-
-    --
-
-else
-    UpdateComputer()
+    os.cancelTimer(TimeID)
 end
+
+
+
+
+
+
+
+
+
+
