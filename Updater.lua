@@ -107,8 +107,8 @@ if args[2] == "true" then
     if GithubFileLink then
         github_file = GithubFileLink.readAll()
         GithubFileLink.close()
-        settings.load("ToasterOsbios")
-        local LocalVerson = settings.get("verson")
+        settings.load("ToasterOSbios")
+        local LocalVerson = settings.get("verson installed from cloud")
         
         
         
@@ -118,8 +118,8 @@ if args[2] == "true" then
             term.setTextColor(colors.white)
         else
             
-            settings.set("verson",github_file)
-            settings.save("ToasterOsbios")
+            settings.set("verson installed from cloud",github_file)
+            settings.save("ToasterOSbios")
             UpdateComputer()
         end
 
