@@ -4,7 +4,7 @@ local args = {...}
 
 local function UpdateComputer()
     local moniterwidth, moniterhight = term.getSize()
-    local amttoinstall = 6
+    local amttoinstall = 7
     local amtinstalled = 0
     local percentDone = 0
     local iconNumberPercentUpto = 0
@@ -98,7 +98,7 @@ local function UpdateComputer()
     InstallFromInternet("https://raw.githubusercontent.com/Ai-Kiwi/ToasterOS3/main/SystemFiles/SystemFiles/WindowManager.lua","SystemFiles/WindowManager.lua")
     --system apps
     InstallFromInternet("https://raw.githubusercontent.com/Ai-Kiwi/ToasterOS3/main/SystemFiles/SystemFiles/SystemPrograms/FileExplorer.lua","SystemFiles/SystemPrograms/FileExplorer.lua")
-
+    InstallFromInternet("https://raw.githubusercontent.com/Ai-Kiwi/ToasterOS3/main/SystemFiles/SystemFiles/SystemPrograms/settings.lua","SystemFiles/SystemPrograms/settings.lua")
 end
 
 if args[2] == "true" then
