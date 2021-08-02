@@ -1,3 +1,5 @@
+local function RunMainOsFunction()
+
 local ScreenWidth,  ScreenHight = term.getSize()
 local TaskBarOffset = 0
 if fs.exists("UserData") == false then
@@ -78,6 +80,7 @@ local ToasterOSSettings = {}
 local BackGroundColor = colors.lightBlue
 local FunctionRefreshApps = true
 local SystemTaskBarApps = {}
+local WasProgeamSelected = false
 
 
 local function UpdateSettingValue(ValueName,DefaltValue)
@@ -133,7 +136,7 @@ local function OpenNewApp(ProgeamLoc,PermLevel)
     --4 operating system perms its dumb to give something accses to this
     --5 rare for a app to need this more of a code thing i did that your not ment to use anyway its used for shell
     
-    table.insert(windowsTerm, {NewWindow,NewCoroutine,{2,2,15,15},true,true,PermLevel,ProgeamLoc})
+    table.insert(windowsTerm, {NewWindow,NewCoroutine,{2,2,15,15},true,true,PermLevel,ProgeamLoc,false})
 
 end
 
@@ -508,17 +511,24 @@ local function RunLoopForProgeam(Number,Input,RunEvent)
         end
         --tests for click
         if EventInput[1] == "mouse_click" then
-            --if clicking on pause butten
-            if EventInput[3] == windowsTerm[Number][3][3] + windowsTerm[Number][3][1] then
+            --butten gui logic
+
+            --if clicking on minazmze butten
+            if EventInput[3] == windowsTerm[Number][3][3] + windowsTerm[Number][3][1] - 1 then
             if EventInput[4] == windowsTerm[Number][3][2] - 1 then
-                windowsTerm[Number][5] = not windowsTerm[Number][5]
+                windowsTerm[Number][4] = false
+            end
+            end
+            --if clicking on maxamize butten
+            if EventInput[3] == windowsTerm[Number][3][3] + windowsTerm[Number][3][1] - 2 then
+            if EventInput[4] == windowsTerm[Number][3][2] - 1 then
+                windowsTerm[Number][8] = not windowsTerm[Number][8]
             end
             end
             --if clicking on stop butten
-            if EventInput[3] == windowsTerm[Number][3][3] + windowsTerm[Number][3][1] -1 then
+            if EventInput[3] == windowsTerm[Number][3][3] + windowsTerm[Number][3][1] then
             if EventInput[4] == windowsTerm[Number][3][2] - 1 then
                 windowsTerm[Number] = nil
-                windowsTerm = fixwindowsTerm(windowsTerm)
                 return
             end
             end
@@ -527,10 +537,11 @@ local function RunLoopForProgeam(Number,Input,RunEvent)
             if EventInput[3] + 2 > windowsTerm[Number][3][1] and EventInput[3] - 1 < windowsTerm[Number][3][3] + windowsTerm[Number][3][1] then
             if EventInput[4] + 2 > windowsTerm[Number][3][2] and EventInput[4] - 1 < windowsTerm[Number][3][4] + windowsTerm[Number][3][2] then
                 SelectedWindow = Number
+                WasProgeamSelected = true
             end
             end
-        
-        
+            
+            
         end
     end
 
@@ -622,8 +633,7 @@ local function RunProgeamLoops()
 
     end
     end
-
-
+    WasProgeamSelected = false
     --for each window
     for i=1, #windowsTerm do
         if windowsTerm[i] == nil then
@@ -641,11 +651,20 @@ local function RunProgeamLoops()
 
     term.redirect(BackGroundTerm)
     --BackGroundTerm.restoreCursor()
+    if WasProgeamSelected == false then
+        if NewEventOutput[1] == "mouse_click" then
+            SelectedWindow = 0
+
+
+        end
+
+    end
+
 end
 
 
 local function DrawBackground()
-
+    --draw buttens
     --paintutils.drawFilledBox(1,1,ScreenWidth,ScreenHight, colors.lightBlue)
     --redraw Windows
     for i=1, #windowsTerm do
@@ -655,24 +674,35 @@ local function DrawBackground()
             if windowsTerm[i][4] == true then
                 --redraws window
                 windowsTerm[i][1].redraw()
+                
                 paintutils.drawBox(windowsTerm[i][3][1] - 1,windowsTerm[i][3][2] - 1,windowsTerm[i][3][3] + windowsTerm[i][3][1],windowsTerm[i][3][4] + windowsTerm[i][3][2],colors.yellow)
+                term.setBackgroundColor(colors.yellow)
+                term.setTextColor(colors.gray)
                 if i == SelectedWindow then
-                    paintutils.drawLine(windowsTerm[i][3][1] - 1,windowsTerm[i][3][2] - 1,windowsTerm[i][3][1] + windowsTerm[i][3][3] - 1, windowsTerm[i][3][2] - 1,colors.green )
+                    term.setTextColor(colors.black)
                 end
+                --draws text
+                local ProgeamName = fs.getName(windowsTerm[i][7]) 
+                term.setCursorPos(windowsTerm[i][3][1],windowsTerm[i][3][2] - 1)
+                ProgeamName = string.sub(ProgeamName, 1,windowsTerm[i][3][3] - 2)
+                term.write(ProgeamName)
+
                 --draws reshape and move buttens
                 paintutils.drawPixel(windowsTerm[i][3][1] - 1,windowsTerm[i][3][2] - 1, colors.orange) --move butten
                 paintutils.drawPixel(windowsTerm[i][3][3] + windowsTerm[i][3][1],windowsTerm[i][3][4] + windowsTerm[i][3][2],colors.green) --resize butten
                 --draws close and minamize and pause buttens
                 if windowsTerm[i][5] == true then
-                    paintutils.drawPixel(windowsTerm[i][3][3] + windowsTerm[i][3][1],windowsTerm[i][3][2] - 1,colors.purple) -- stop botten
+                    paintutils.drawPixel(windowsTerm[i][3][3] + windowsTerm[i][3][1] - 2,windowsTerm[i][3][2] - 1,colors.green) -- maxamize botten
                 else
-                    paintutils.drawPixel(windowsTerm[i][3][3] + windowsTerm[i][3][1],windowsTerm[i][3][2] - 1,colors.green) -- resume botten
+                    paintutils.drawPixel(windowsTerm[i][3][3] + windowsTerm[i][3][1] - 2,windowsTerm[i][3][2] - 1,colors.green) -- un maxamize botten
                 end
-                paintutils.drawPixel(windowsTerm[i][3][3] + windowsTerm[i][3][1] - 1,windowsTerm[i][3][2] - 1,colors.red) --quit app butten
+                paintutils.drawPixel(windowsTerm[i][3][3] + windowsTerm[i][3][1] - 1,windowsTerm[i][3][2] - 1,colors.orange) --minazmze butten
+                paintutils.drawPixel(windowsTerm[i][3][3] + windowsTerm[i][3][1],windowsTerm[i][3][2] - 1,colors.red) --stop butten
             end
         end
     end
 end
+
 
 local function DrawOverApps()
     if ToasterOSSettings.CenterTaskBar == "3" then
@@ -793,14 +823,17 @@ function AppLuncher()
                         ProgeamsFound = fs.list("ProgramShortcuts/")
                         if FlooredItemClickedOn > #ProgeamsFound then
                         else
-                            --gets shortcut locastion
-                            settings.load("ProgramShortcuts/" .. ProgeamsFound[FlooredItemClickedOn])
-                            ShortcutName = settings.get("shortcut loc")
-                            	
-                            local PermLevelToLoad = settings.get("boot perm level")
-                            OpenNewApp(ShortcutName,PermLevelToLoad)
-                            FunctionRefreshApps = true
-                            return
+                            if ProgeamsFound[FlooredItemClickedOn] == nil then
+                            else
+                                --gets shortcut locastion
+                                settings.load("ProgramShortcuts/" .. ProgeamsFound[FlooredItemClickedOn])
+                                ShortcutName = settings.get("shortcut loc")
+                                
+                                local PermLevelToLoad = settings.get("boot perm level")
+                                OpenNewApp(ShortcutName,PermLevelToLoad)
+                                FunctionRefreshApps = true
+                                return
+                            end
                         end
                     end
                 end
@@ -857,6 +890,30 @@ while true do
     RunProgeamLoops()
     
 end
+
+end
+
+
+
+
+
+local HasError, ErrorMessage = pcall(RunMainOsFunction)
+term.setBackgroundColor(colors.red)
+term.clear()
+term.setCursorPos(1,1)
+print("Your PC has burnt the toast.")
+print("")
+print(ErrorMessage)
+print("")
+print("please report this to our github issues tab at : `https://github.com/Ai-Kiwi/ToasterOS3/issues/new`")
+settings.load("ToasterOSbios")
+print("Make sure to include your toaster os verson : " .. settings.get("verson installed from cloud"))
+print("")
+print("enter to continue into installer")
+read()
+shell.run("wget run https://raw.githubusercontent.com/Ai-Kiwi/ToasterOS3/main/installer.lua")
+os.reboot()
+
 
 
 
