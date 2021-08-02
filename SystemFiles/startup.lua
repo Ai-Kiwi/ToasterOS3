@@ -18,16 +18,18 @@ local function LoadIntoOS()
     BackGroundFlash(colors.blue,0.05)
     
     while true do
-        shell.run("SystemFiles/WindowManager.lua")
-        os.sleep(5)
-        term.clear()
-        term.setCursorPos(1,1)
-        term.setTextColor(colors.red)
-        term.setBackgroundColor(colors.black)
-        print("a big error has happen we will now boot you into toaster os installer soo you cna fix it")
-        print("enter to continue")
-        read()
-        shell.run("wget run https://raw.githubusercontent.com/Ai-Kiwi/ToasterOS3/main/installer.lua")
+        ProgeamError, ErrorMessage = shell.run("SystemFiles/WindowManager.lua")
+        if ProgeamError then
+            term.clear()
+            term.setCursorPos(1,1)
+            term.setTextColor(colors.red)
+            term.setBackgroundColor(colors.black)
+            print("Something happened")
+            print("ErrorMessage")
+            print("enter to continue")
+            local Thing = read()
+            shell.run("wget run https://raw.githubusercontent.com/Ai-Kiwi/ToasterOS3/main/installer.lua")
+        end
     end
 end
 term.clear()
@@ -69,7 +71,6 @@ while true do
     end
     os.cancelTimer(TimeID)
 end
-
 
 
 
