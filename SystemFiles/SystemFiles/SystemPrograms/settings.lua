@@ -1,4 +1,4 @@
---coroutine.yield({"RunFile","settings.lua","true"})
+--coroutine.yield({"RunFile","settings.lua",5,"true"})
 local ToasterOSSettingsTabs = {}
 local ToasterOSSettingsTabsDesc = {}
 ToasterOSSettingsTabs = {"center task bar"}
