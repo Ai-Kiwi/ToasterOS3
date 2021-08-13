@@ -1,7 +1,7 @@
 local function RunMainOsFunction()
-
-    require("ToasterOSCodingApi")
     
+    Frame = require("libs/Frame")
+
     local ScreenWidth,  ScreenHight = term.getSize()
     local TaskBarOffset = 0
     if fs.exists("UserData") == false then
@@ -53,7 +53,8 @@ local function RunMainOsFunction()
     local StartupPath = "UserData/" .. UserLogined .. "/UserFiles/OnStartup/"
     local UserFilesPath = "UserData/" .. UserLogined .. "/"
     local CommandNextTick = {}
-    local BackGroundTerm = term.current()
+    local BackGroundTerm = Frame.new(term.current())
+    BackGroundTerm.Initialize()
     local WindowEventOutput = {}
     local windowsTerm = {}
     
@@ -123,7 +124,7 @@ local function RunMainOsFunction()
             --coroutine.yield({"RefeshSettings"})
             if coroutineOutput[1] == "RefeshSettings" then
                 SudoRunFunction(UpdateSettings)
-                return {"ToasterOSCommand","UserName","RefeshSettings"}
+                return {"ToasterOSCommand","RefeshSettings","RefeshSettings"}
             end
             --coroutine.yield({"UserName"})
             if coroutineOutput[1] == "UserName" then
@@ -149,6 +150,7 @@ local function RunMainOsFunction()
     
     
     function CoroutineRunAppFunction()
+        
         shell.run(ProgeamToRun)
         os.sleep(1)
         --says progeam has ended
@@ -194,6 +196,7 @@ local function RunMainOsFunction()
                     if windowsTerm[Number][3][4] < 5 then windowsTerm[Number][3][4] = 5 end
                 end
                 windowsTerm[Number][1].reposition(windowsTerm[Number][3][1],windowsTerm[Number][3][2],windowsTerm[Number][3][3],windowsTerm[Number][3][4])
+                
             else
                 --resets values if not mouse drag
                 IsMoveingWindow[Number] = false
@@ -244,8 +247,40 @@ local function RunMainOsFunction()
                 ProgeamEventInput[3] = ProgeamEventInput[3] - windowsTerm[Number][3][1] + 1
                 ProgeamEventInput[4] =  ProgeamEventInput[4] - windowsTerm[Number][3][2] + 1
             end
-    
-    
+                term.redirect(BackGroundTerm)
+                if windowsTerm[Number] == nil then
+                else
+                    --cheeks if progream is not hidden
+                    if windowsTerm[Number][4] == true then
+                        --redraws window
+                        windowsTerm[Number][1].redraw()
+                        
+                        paintutils.drawBox(windowsTerm[Number][3][1] - 1,windowsTerm[Number][3][2] - 1,windowsTerm[Number][3][3] + windowsTerm[Number][3][1],windowsTerm[Number][3][4] + windowsTerm[Number][3][2],colors.yellow)
+                        term.setBackgroundColor(colors.yellow)
+                        term.setTextColor(colors.gray)
+                        if Number == SelectedWindow then
+                            term.setTextColor(colors.black)
+                        end
+                        --draws text
+                        local ProgeamName = fs.getName(windowsTerm[Number][7]) 
+                        term.setCursorPos(windowsTerm[Number][3][1],windowsTerm[Number][3][2] - 1)
+                        ProgeamName = string.sub(ProgeamName, 1,windowsTerm[Number][3][3] - 2)
+                        term.write(ProgeamName)
+        
+                        --draws reshape and move buttens
+                        paintutils.drawPixel(windowsTerm[Number][3][1] - 1,windowsTerm[Number][3][2] - 1, colors.orange) --move butten
+                        paintutils.drawPixel(windowsTerm[Number][3][3] + windowsTerm[Number][3][1],windowsTerm[Number][3][4] + windowsTerm[Number][3][2],colors.green) --resize butten
+                        --draws close and minamize and pause buttens
+                        if windowsTerm[Number][5] == true then
+                            paintutils.drawPixel(windowsTerm[Number][3][3] + windowsTerm[Number][3][1] - 2,windowsTerm[Number][3][2] - 1,colors.green) -- maxamize botten
+                        else
+                            paintutils.drawPixel(windowsTerm[Number][3][3] + windowsTerm[Number][3][1] - 2,windowsTerm[Number][3][2] - 1,colors.green) -- un maxamize botten
+                        end
+                        paintutils.drawPixel(windowsTerm[Number][3][3] + windowsTerm[Number][3][1] - 1,windowsTerm[Number][3][2] - 1,colors.orange) --minazmze butten
+                        paintutils.drawPixel(windowsTerm[Number][3][3] + windowsTerm[Number][3][1],windowsTerm[Number][3][2] - 1,colors.red) --stop butten
+                    end
+                end
+
     
             --cheeks if progeam is running
             if windowsTerm[Number][5] == true and RunEvent then
@@ -347,43 +382,11 @@ local function RunMainOsFunction()
     
     
     local function DrawBackground()
-        --draw buttens
-        --paintutils.drawFilledBox(1,1,ScreenWidth,ScreenHight, colors.lightBlue)
-        --redraw Windows
-        for i=1, #windowsTerm do
-            if windowsTerm[i] == nil then
-            else
-                --cheeks if progream is not hidden
-                if windowsTerm[i][4] == true then
-                    --redraws window
-                    windowsTerm[i][1].redraw()
-                    
-                    paintutils.drawBox(windowsTerm[i][3][1] - 1,windowsTerm[i][3][2] - 1,windowsTerm[i][3][3] + windowsTerm[i][3][1],windowsTerm[i][3][4] + windowsTerm[i][3][2],colors.yellow)
-                    term.setBackgroundColor(colors.yellow)
-                    term.setTextColor(colors.gray)
-                    if i == SelectedWindow then
-                        term.setTextColor(colors.black)
-                    end
-                    --draws text
-                    local ProgeamName = fs.getName(windowsTerm[i][7]) 
-                    term.setCursorPos(windowsTerm[i][3][1],windowsTerm[i][3][2] - 1)
-                    ProgeamName = string.sub(ProgeamName, 1,windowsTerm[i][3][3] - 2)
-                    term.write(ProgeamName)
-    
-                    --draws reshape and move buttens
-                    paintutils.drawPixel(windowsTerm[i][3][1] - 1,windowsTerm[i][3][2] - 1, colors.orange) --move butten
-                    paintutils.drawPixel(windowsTerm[i][3][3] + windowsTerm[i][3][1],windowsTerm[i][3][4] + windowsTerm[i][3][2],colors.green) --resize butten
-                    --draws close and minamize and pause buttens
-                    if windowsTerm[i][5] == true then
-                        paintutils.drawPixel(windowsTerm[i][3][3] + windowsTerm[i][3][1] - 2,windowsTerm[i][3][2] - 1,colors.green) -- maxamize botten
-                    else
-                        paintutils.drawPixel(windowsTerm[i][3][3] + windowsTerm[i][3][1] - 2,windowsTerm[i][3][2] - 1,colors.green) -- un maxamize botten
-                    end
-                    paintutils.drawPixel(windowsTerm[i][3][3] + windowsTerm[i][3][1] - 1,windowsTerm[i][3][2] - 1,colors.orange) --minazmze butten
-                    paintutils.drawPixel(windowsTerm[i][3][3] + windowsTerm[i][3][1],windowsTerm[i][3][2] - 1,colors.red) --stop butten
-                end
-            end
-        end
+        --  local ScreenCenterX = math.floor(ScreenWidth / 2)
+        --  local ScreenCenterY = math.floor(ScreenWidth / 2)
+        --  paintutils.drawFilledBox(ScreenCenterX - 3,ScreenCenterY - 1,ScreenCenterX + 3,ScreenCenterY + 3, colors.orange)
+
+        
     end
     
     
@@ -528,6 +531,7 @@ local function RunMainOsFunction()
             end
             RunProgeamLoops()
             DrawAppLuncher()
+            BackGroundTerm.PushBuffer()
         end
     
     end
@@ -564,10 +568,10 @@ local function RunMainOsFunction()
         end
     
         DrawBackground()
-        DrawOverApps()
         NewEventOutput = {os.pullEventRaw()}
         RunProgeamLoops()
-        
+        DrawOverApps()
+        BackGroundTerm.PushBuffer()
     end
     
     end
@@ -584,7 +588,7 @@ local function RunMainOsFunction()
     print(ErrorMessage)
     print("")
     print("please report this to our github issues tab at : `https://github.com/Ai-Kiwi/ToasterOS3/issues/new`")
-    settings.load("ToasterOSbios")
+    settings.load("SystemFiles/ToasterOSbios")
     print("Make sure to include your toaster os verson : " .. settings.get("verson installed from cloud"))
     print("")
     print("enter to continue into installer")

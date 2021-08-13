@@ -110,7 +110,7 @@ if args[2] == "true" then
     if GithubFileLink then
         github_file = GithubFileLink.readAll()
         GithubFileLink.close()
-        settings.load("ToasterOSbios")
+        settings.load("SystemFiles/ToasterOSbios")
         local LocalVerson = settings.get("verson installed from cloud")
         
         
@@ -122,7 +122,7 @@ if args[2] == "true" then
         else
             
             settings.set("verson installed from cloud",github_file)
-            settings.save("ToasterOSbios")
+            settings.save("SystemFiles/ToasterOSbios")
             UpdateComputer()
         end
 
