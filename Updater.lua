@@ -53,7 +53,7 @@ local function UpdateComputer()
         fs.delete(LOC)
         
         print("installing " .. URL .. " from github")
-        local GithubFileLink = http.get(URL)
+        local GithubFileLink = http.get(URL .. "?cb=" .. math.random(1,99999999))
         if GithubFileLink then
             github_file = GithubFileLink.readAll()
             GithubFileLink.close()
@@ -105,7 +105,8 @@ end
 
 if args[2] == "true" then
     print("Cheeking for updates")
-    local GithubFileLink = http.get("https://raw.githubusercontent.com/Ai-Kiwi/ToasterOS3/main/verson")
+    --cacher buster ?cb=(random number here)
+    local GithubFileLink = http.get("https://raw.githubusercontent.com/Ai-Kiwi/ToasterOS3/main/verson" .. "?cb=" .. math.random(1,99999999))
     if GithubFileLink then
         github_file = GithubFileLink.readAll()
         GithubFileLink.close()
