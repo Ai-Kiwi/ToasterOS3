@@ -18,18 +18,19 @@ local function LoadIntoOS()
     BackGroundFlash(colors.blue,0.05)
     
     while true do
-        ProgeamError, ErrorMessage = shell.run("SystemFiles/WindowManager.lua")
-        if ProgeamError then
-            term.clear()
-            term.setCursorPos(1,1)
-            term.setTextColor(colors.red)
-            term.setBackgroundColor(colors.black)
-            print("Something happened")
-            print("ErrorMessage")
-            print("enter to continue")
-            local Thing = read()
-            shell.run("wget run https://raw.githubusercontent.com/Ai-Kiwi/ToasterOS3/main/installer.lua")
-        end
+        shell.run("SystemFiles/WindowManager.lua")
+        term.setCursorPos(1,1)
+        term.setTextColor(colors.red)
+        term.setBackgroundColor(colors.black)
+        print("Something happened")
+        print("Something happened")
+        print("enter to continue")
+        CrashReportFile = fs.open("SystemFiles/CrashReport.txt","w")
+        CrashReportFile.writeLine("Verson : " .. settings.get("verson installed from cloud"))
+        CrashReportFile.writeLine("CrashLevel : startup.lua")
+        CrashReportFile.close()
+        local Thing = read()
+        shell.run("wget run https://raw.githubusercontent.com/Ai-Kiwi/ToasterOS3/main/installer.lua")
     end
 end
 term.clear()
@@ -71,7 +72,6 @@ while true do
     end
     os.cancelTimer(TimeID)
 end
-
 
 
 
