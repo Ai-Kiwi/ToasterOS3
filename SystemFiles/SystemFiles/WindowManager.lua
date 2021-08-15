@@ -464,7 +464,7 @@ local function RunMainOsFunction()
                     WhereToLook = WhereToLook - 6
                     WhereToLook = WhereToLook + IconX
                     WhereToLook = WhereToLook * 3
-    
+                    
                     
                     --draws pixel
                     term.setTextColour(IconData[WhereToLook - 2])
