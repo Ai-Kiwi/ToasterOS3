@@ -511,11 +511,16 @@ local function RunMainOsFunction()
                             else
                                 if ProgeamsFound[FlooredItemClickedOn] == nil then
                                 else
+
                                     --gets shortcut locastion
                                     settings.load(UserFilesPath .. "ProgramShortcuts/" .. ProgeamsFound[FlooredItemClickedOn])
                                     ShortcutName = settings.get("shortcut loc")
-    
-                                    OpenNewApp(ShortcutName)
+                                    --app open exzample ProgramData/AppMaker/core.lua > you user files program apps 
+                                    if string.match(ShortcutName, "ProgramData/") then
+                                        OpenNewApp(UserFilesPath .. ShortcutName)
+                                    else
+                                        OpenNewApp(ShortcutName)
+                                    end
                                     FunctionRefreshApps = true
                                     return
                                 end
